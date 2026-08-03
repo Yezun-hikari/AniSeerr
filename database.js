@@ -42,6 +42,22 @@ db.serialize(() => {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  // Ensure columns exist if table was already created
+  const newCols = [
+    "movie_site TEXT DEFAULT 'megakino'",
+    "series_site TEXT DEFAULT 'sto'",
+    "movie_provider TEXT DEFAULT 'VOE'",
+    "series_provider TEXT DEFAULT 'VOE'",
+    "movie_language TEXT DEFAULT 'German Dub'",
+    "series_language TEXT DEFAULT 'German Dub'"
+  ];
+  
+  newCols.forEach(col => {
+    const colName = col.split(' ')[0];
+    db.run(`ALTER TABLE settings ADD COLUMN ${col}`, (err) => {
+      // Ignore errors if column already exists
+    });
+  });
 });
 
 // Helper to get settings

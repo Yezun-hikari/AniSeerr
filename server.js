@@ -94,17 +94,25 @@ app.post('/webhook', async (req, res) => {
     // Check if this is an approved request
     // Seerr payload typically has notification_type or event
     const event = payload.event || payload.notification_type;
-    const mediaStatus = payload.media ? payload.media.status : null;
+    const mediaObj = payload.media || payload['{{media}}'] || {};
+    const reqObj = payload.request || payload['{{request}}'] || {};
+    const mediaStatus = mediaObj.status;
     
-    if (event === 'MEDIA_APPROVED' || event === 'TEST' || mediaStatus === 'APPROVED' || mediaStatus === 3 /* APPROVED status code */ || (payload.request && payload.request.status === 'APPROVED')) {
+    if (event === 'MEDIA_APPROVED' || event === 'TEST' || event === '{{event}}' || mediaStatus === 'APPROVED' || mediaStatus === 3 || reqObj.status === 'APPROVED') {
       
-      const title = payload.subject || (payload.media && payload.media.title) || "Unknown Title";
+      const title = payload.subject || mediaObj.title || payload['{{subject}}'] || "Unknown Title";
       let type = "series";
-      if (payload.media && payload.media.media_type) {
-         type = payload.media.media_type.toLowerCase() === 'movie' ? 'movie' : 'series';
+      if (mediaObj.media_type) {
+         type = mediaObj.media_type.toLowerCase() === 'movie' ? 'movie' : 'series';
       }
-      const requester = (payload.request && payload.request.requestedBy_username) || "Unknown User";
-      const seerr_request_id = (payload.request && payload.request.request_id) || null;
+      const requester = reqObj.requestedBy_username || payload['{{requestedBy_username}}'] || "Unknown User";
+      const seerr_request_id = reqObj.request_id || payload['{{request_id}}'] || null;
+
+      if (event === 'TEST' || event === '{{event}}') {
+         console.log("Test Webhook received successfully!");
+         await db.addRequest(seerr_request_id, requester, "Test Request", type, "success (Test)");
+         return res.status(200).json({ status: "OK - Test Received" });
+      }
 
       // Custom Search and Queue logic instead of Planned Releases
       let queueStatus = "success";

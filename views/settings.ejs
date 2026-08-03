@@ -10,18 +10,7 @@
   <% } %>
 
   <form method="POST" action="/settings">
-    <div class="row">
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Seerr Domain/URL</label>
-        <input type="text" class="form-control" name="seerr_url" value="<%= settings.seerr_url || '' %>" placeholder="http://localhost:5055" required>
-      </div>
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Seerr API Key</label>
-        <input type="text" class="form-control" name="seerr_api_key" value="<%= settings.seerr_api_key || '' %>">
-      </div>
-    </div>
-
-    <hr>
+    <!-- Seerr settings removed as they are not needed for webhook push -->
     
     <div class="row">
       <div class="col-md-4 mb-3">
