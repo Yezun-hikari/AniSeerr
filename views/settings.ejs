@@ -1,0 +1,110 @@
+<%- include('layout', {body: `
+<div class="mt-4">
+  <h2>Settings</h2>
+  
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert alert-success">Settings saved successfully.</div>
+  <% } %>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <form method="POST" action="/settings">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Seerr Domain/URL</label>
+        <input type="text" class="form-control" name="seerr_url" value="<%= settings.seerr_url || '' %>" placeholder="http://localhost:5055" required>
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Seerr API Key</label>
+        <input type="text" class="form-control" name="seerr_api_key" value="<%= settings.seerr_api_key || '' %>">
+      </div>
+    </div>
+
+    <hr>
+    
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">AniWorld-Downloader URL</label>
+        <input type="text" class="form-control" name="aniworld_url" id="aniworld_url" value="<%= settings.aniworld_url || '' %>" placeholder="http://localhost:8080" required>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">AniWorld Username</label>
+        <input type="text" class="form-control" name="aniworld_username" value="<%= settings.aniworld_username || '' %>">
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">AniWorld Password</label>
+        <input type="password" class="form-control" name="aniworld_password" value="<%= settings.aniworld_password || '' %>">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <h4>Movie Preferences</h4>
+        <label class="form-label">Movie Site Priority</label>
+        <input type="text" class="form-control mb-2" name="movie_site" value="<%= settings.movie_site || 'megakino,filmpalast,cineby' %>" placeholder="megakino,filmpalast">
+        <small class="text-muted d-block mb-3">Comma separated priority list (e.g. megakino, filmpalast, cineby)</small>
+        
+        <label class="form-label">Provider</label>
+        <input type="text" class="form-control mb-2" name="movie_provider" value="<%= settings.movie_provider || 'VOE' %>" placeholder="VOE, Filemoon, etc.">
+
+        <label class="form-label">Language</label>
+        <input type="text" class="form-control mb-2" name="movie_language" value="<%= settings.movie_language || 'German Dub' %>" placeholder="German Dub, English Sub, etc.">
+
+        <label class="form-label">Default Download Path</label>
+        <select class="form-select path-select" name="default_movie_path" data-selected="<%= settings.default_movie_path || '' %>">
+          <option value="">Default Path</option>
+        </select>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <h4>Series Preferences</h4>
+        <label class="form-label">Series Site Priority</label>
+        <input type="text" class="form-control mb-2" name="series_site" value="<%= settings.series_site || 'aniworld,sto' %>" placeholder="aniworld,sto">
+        <small class="text-muted d-block mb-3">Comma separated priority list (e.g. aniworld, sto)</small>
+
+        <label class="form-label">Provider</label>
+        <input type="text" class="form-control mb-2" name="series_provider" value="<%= settings.series_provider || 'VOE' %>" placeholder="VOE, Filemoon, etc.">
+
+        <label class="form-label">Language</label>
+        <input type="text" class="form-control mb-2" name="series_language" value="<%= settings.series_language || 'German Dub' %>" placeholder="German Dub, English Sub, etc.">
+
+        <label class="form-label">Default Download Path</label>
+        <select class="form-select path-select" name="default_series_path" data-selected="<%= settings.default_series_path || '' %>">
+          <option value="">Default Path</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Settings</button>
+    <button type="button" class="btn btn-secondary" onclick="fetchPaths()">Load Paths from AniWorld</button>
+  </form>
+</div>
+
+<script>
+  async function fetchPaths() {
+    try {
+      const resp = await fetch('/api/paths');
+      const data = await resp.json();
+      if (data.paths) {
+        document.querySelectorAll('.path-select').forEach(select => {
+          const selected = select.getAttribute('data-selected');
+          select.innerHTML = '<option value="">Default Path</option>';
+          data.paths.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.name;
+            if (String(p.id) === selected) opt.selected = true;
+            select.appendChild(opt);
+          });
+        });
+      }
+    } catch(err) {
+      alert("Failed to load paths. Ensure AniWorld URL is correct and saved.");
+    }
+  }
+
+  // Load paths on page load
+  window.addEventListener('load', fetchPaths);
+</script>
+`}) %>

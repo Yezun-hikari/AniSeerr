@@ -1,0 +1,45 @@
+<%- include('layout', {body: `
+<div class="mt-4">
+  <h2>Accepted Requests</h2>
+  <p>Requests automatically accepted by Seerr and sent to AniWorld.</p>
+  
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Type</th>
+          <th>Requester</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (requests.length === 0) { %>
+          <tr>
+            <td colspan="6" class="text-center">No requests yet.</td>
+          </tr>
+        <% } else { %>
+          <% requests.forEach(function(req) { %>
+            <tr>
+              <td><%= req.seerr_request_id %></td>
+              <td><strong><%= req.title %></strong></td>
+              <td><span class="badge bg-secondary"><%= req.type %></span></td>
+              <td><%= req.requester %></td>
+              <td>
+                <% if (req.status === 'success') { %>
+                  <span class="badge bg-success">Queued in AniWorld</span>
+                <% } else { %>
+                  <span class="badge bg-danger">Error: <%= req.status %></span>
+                <% } %>
+              </td>
+              <td><%= new Date(req.timestamp).toLocaleString() %></td>
+            </tr>
+          <% }); %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+`}) %>

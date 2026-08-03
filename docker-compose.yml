@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  aniseerr-bridge:
+    build: .
+    container_name: aniseerr-bridge
+    ports:
+      - "5060:5060"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

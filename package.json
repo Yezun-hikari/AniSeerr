@@ -1,0 +1,17 @@
+{
+  "name": "aniseerr-bridge",
+  "version": "1.0.0",
+  "description": "Bridge between Seerr and AniWorld-Downloader",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  }
+}
