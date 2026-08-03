@@ -28,8 +28,14 @@
               <td><span class="badge bg-secondary"><%= req.type %></span></td>
               <td><%= req.requester %></td>
               <td>
-                <% if (req.status === 'success') { %>
-                  <span class="badge bg-success">Queued in AniWorld</span>
+                <% if (req.status === 'success' || req.status.includes('Queued')) { %>
+                  <span class="badge bg-success"><%= req.status === 'success' ? 'Queued in AniWorld' : req.status %></span>
+                <% } else if (req.status === 'Pending Approval') { %>
+                  <span class="badge bg-warning text-dark">Pending</span>
+                <% } else if (req.status === 'Declined') { %>
+                  <span class="badge bg-danger">Declined</span>
+                <% } else if (req.status === 'Processing Download...') { %>
+                  <span class="badge bg-info text-dark">Processing...</span>
                 <% } else { %>
                   <span class="badge bg-danger">Error: <%= req.status %></span>
                 <% } %>

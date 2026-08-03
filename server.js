@@ -98,6 +98,7 @@ app.post('/webhook', async (req, res) => {
     const mediaObj = payload.media || payload['{{media}}'] || {};
     const reqObj = payload.request || payload['{{request}}'] || {};
     const mediaStatus = mediaObj.status;
+    const extraArr = payload.extra || payload['{{extra}}'] || [];
     
     const isApproved = 
       notifType === 'MEDIA_APPROVED' || notifType === 'MEDIA_AUTO_APPROVED' || 
@@ -105,21 +106,58 @@ app.post('/webhook', async (req, res) => {
       notifType === 'TEST' || eventType === 'TEST' || eventType === '{{event}}' ||
       mediaStatus === 'APPROVED' || mediaStatus === 3 || reqObj.status === 'APPROVED';
 
-    if (isApproved) {
-      
-      const title = payload.subject || mediaObj.title || payload['{{subject}}'] || "Unknown Title";
-      let type = "series";
-      if (mediaObj.media_type) {
-         type = mediaObj.media_type.toLowerCase() === 'movie' ? 'movie' : 'series';
-      }
-      const requester = reqObj.requestedBy_username || payload['{{requestedBy_username}}'] || "Unknown User";
-      const seerr_request_id = reqObj.request_id || payload['{{request_id}}'] || null;
+    const isPending = notifType === 'MEDIA_PENDING' || eventType === 'MEDIA_PENDING' || mediaStatus === 'PENDING' || reqObj.status === 'PENDING';
+    const isDeclined = notifType === 'MEDIA_DECLINED' || eventType === 'MEDIA_DECLINED' || mediaStatus === 'DECLINED' || reqObj.status === 'DECLINED';
+    const isAvailable = notifType === 'MEDIA_AVAILABLE' || eventType === 'MEDIA_AVAILABLE' || mediaStatus === 'AVAILABLE' || mediaStatus === 5;
 
-      if (notifType === 'TEST' || eventType === 'TEST' || eventType === '{{event}}') {
-         console.log("Test Webhook received successfully!");
-         await db.addRequest(seerr_request_id, requester, "Test Request", type, "success (Test)");
-         return res.status(200).json({ status: "OK - Test Received" });
-      }
+    let extraDetails = "";
+    let requestedSeasons = [];
+    if (Array.isArray(extraArr)) {
+      extraArr.forEach(item => {
+        if (item && item.name && item.value) {
+          extraDetails += ` (${item.name}: ${item.value})`;
+          if (item.name === 'Requested Seasons') {
+             requestedSeasons = item.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+          }
+        }
+      });
+    }
+
+    const title = (payload.subject || mediaObj.title || payload['{{subject}}'] || "Unknown Title") + extraDetails;
+    let type = "series";
+    if (mediaObj.media_type) {
+       type = mediaObj.media_type.toLowerCase() === 'movie' ? 'movie' : 'series';
+    }
+    const requester = reqObj.requestedBy_username || payload['{{requestedBy_username}}'] || "Unknown User";
+    const seerr_request_id = reqObj.request_id || payload['{{request_id}}'] || null;
+
+    if (notifType === 'TEST' || eventType === 'TEST' || eventType === '{{event}}') {
+       console.log("Test Webhook received successfully!");
+       await db.addOrUpdateRequest(seerr_request_id, requester, "Test Request", type, "success (Test)");
+       return res.status(200).json({ status: "OK - Test Received" });
+    }
+
+    if (isAvailable) {
+       console.log(`Media is available. Deleting request ${seerr_request_id} from tracking.`);
+       await db.deleteRequest(seerr_request_id);
+       return res.status(200).json({ status: "OK - Request removed" });
+    }
+
+    if (isPending) {
+       console.log(`Media is pending. Adding request ${seerr_request_id} to tracking.`);
+       await db.addOrUpdateRequest(seerr_request_id, requester, title, type, "Pending Approval");
+       return res.status(200).json({ status: "OK - Pending Added" });
+    }
+
+    if (isDeclined) {
+       console.log(`Media was declined. Deleting request ${seerr_request_id}.`);
+       await db.deleteRequest(seerr_request_id);
+       return res.status(200).json({ status: "OK - Declined and removed" });
+    }
+
+    if (isApproved) {
+       // Proceed to download
+       await db.addOrUpdateRequest(seerr_request_id, requester, title, type, "Processing Download...");
 
       // Custom Search and Queue logic instead of Planned Releases
       let queueStatus = "success";
@@ -175,6 +213,13 @@ app.post('/webhook', async (req, res) => {
                
                let allEpisodes = [];
                for (const season of seasons) {
+                 if (requestedSeasons.length > 0 && season.season_number !== undefined) {
+                    if (!requestedSeasons.includes(parseInt(season.season_number))) {
+                        console.log(`Skipping season ${season.season_number} because it was not requested.`);
+                        continue;
+                    }
+                 }
+                 
                  const episodesResp = await client.get('/api/series', { params: { url: season.url } });
                  const episodes = episodesResp.data.episodes || [];
                  for (const ep of episodes) {
@@ -200,15 +245,17 @@ app.post('/webhook', async (req, res) => {
                }
             }
           }
+          queueStatus = `Download Queued on ${foundSite}`;
+          console.log(queueStatus);
+          await db.addOrUpdateRequest(seerr_request_id, requester, title, type, queueStatus);
         } else {
-          queueStatus = "AniWorld not configured";
+          queueStatus = "AniWorld API Error";
+          await db.addOrUpdateRequest(seerr_request_id, requester, title, type, queueStatus);
         }
       } catch (err) {
-        console.error("Failed to add to AniWorld:", err.message);
-        queueStatus = err.response ? `API Error ${err.response.status}` : "Network Error";
+        console.error("Webhook download logic error:", err);
+        await db.addOrUpdateRequest(seerr_request_id, requester, title, type, "Internal Error");
       }
-
-      await db.addRequest(seerr_request_id, requester, title, type, queueStatus);
     }
 
     res.status(200).json({ status: "OK" });

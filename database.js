@@ -115,6 +115,44 @@ function addRequest(seerr_request_id, requester, title, type, status) {
   });
 }
 
+// Helper to add or update a request
+function addOrUpdateRequest(seerr_request_id, requester, title, type, status) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT id FROM requests WHERE seerr_request_id = ?`, [seerr_request_id], (err, row) => {
+      if (err) return reject(err);
+      if (row) {
+        db.run(
+          `UPDATE requests SET requester = ?, title = ?, type = ?, status = ?, timestamp = CURRENT_TIMESTAMP WHERE seerr_request_id = ?`,
+          [requester, title, type, status, seerr_request_id],
+          function (err) {
+            if (err) reject(err);
+            else resolve(row.id);
+          }
+        );
+      } else {
+        db.run(
+          `INSERT INTO requests (seerr_request_id, requester, title, type, status) VALUES (?, ?, ?, ?, ?)`,
+          [seerr_request_id, requester, title, type, status],
+          function (err) {
+            if (err) reject(err);
+            else resolve(this.lastID);
+          }
+        );
+      }
+    });
+  });
+}
+
+// Helper to delete a request
+function deleteRequest(seerr_request_id) {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM requests WHERE seerr_request_id = ?`, [seerr_request_id], function(err) {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
+
 // Helper to get all requests
 function getRequests() {
   return new Promise((resolve, reject) => {
@@ -128,6 +166,7 @@ function getRequests() {
 module.exports = {
   getSettings,
   saveSettings,
-  addRequest,
+  addOrUpdateRequest,
+  deleteRequest,
   getRequests
 };
