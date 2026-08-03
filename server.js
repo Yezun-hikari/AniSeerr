@@ -93,12 +93,19 @@ app.post('/webhook', async (req, res) => {
     
     // Check if this is an approved request
     // Seerr payload typically has notification_type or event
-    const event = payload.event || payload.notification_type;
+    const notifType = payload.notification_type;
+    const eventType = payload.event;
     const mediaObj = payload.media || payload['{{media}}'] || {};
     const reqObj = payload.request || payload['{{request}}'] || {};
     const mediaStatus = mediaObj.status;
     
-    if (event === 'MEDIA_APPROVED' || event === 'TEST' || event === '{{event}}' || mediaStatus === 'APPROVED' || mediaStatus === 3 || reqObj.status === 'APPROVED') {
+    const isApproved = 
+      notifType === 'MEDIA_APPROVED' || notifType === 'MEDIA_AUTO_APPROVED' || 
+      eventType === 'MEDIA_APPROVED' || eventType === 'MEDIA_AUTO_APPROVED' ||
+      notifType === 'TEST' || eventType === 'TEST' || eventType === '{{event}}' ||
+      mediaStatus === 'APPROVED' || mediaStatus === 3 || reqObj.status === 'APPROVED';
+
+    if (isApproved) {
       
       const title = payload.subject || mediaObj.title || payload['{{subject}}'] || "Unknown Title";
       let type = "series";
@@ -108,7 +115,7 @@ app.post('/webhook', async (req, res) => {
       const requester = reqObj.requestedBy_username || payload['{{requestedBy_username}}'] || "Unknown User";
       const seerr_request_id = reqObj.request_id || payload['{{request_id}}'] || null;
 
-      if (event === 'TEST' || event === '{{event}}') {
+      if (notifType === 'TEST' || eventType === 'TEST' || eventType === '{{event}}') {
          console.log("Test Webhook received successfully!");
          await db.addRequest(seerr_request_id, requester, "Test Request", type, "success (Test)");
          return res.status(200).json({ status: "OK - Test Received" });
