@@ -173,7 +173,11 @@ app.post('/webhook', async (req, res) => {
       });
     }
 
-    const title = (payload.subject || mediaObj.title || payload['{{subject}}'] || "Unknown Title") + extraDetails;
+    const rawTitle = payload.subject || mediaObj.title || payload['{{subject}}'] || "Unknown Title";
+    const title = rawTitle + extraDetails;
+    
+    // Clean up title for searching (replace en-dash with hyphen, remove trailing (YYYY) year)
+    const searchKeyword = rawTitle.replace(/–/g, '-').replace(/\s*\(\d{4}\)\s*$/, '').trim();
     let type = "series";
     if (mediaObj.media_type) {
        type = mediaObj.media_type.toLowerCase() === 'movie' ? 'movie' : 'series';
@@ -227,7 +231,7 @@ app.post('/webhook', async (req, res) => {
           // 1. Search for title across priority sites
           for (const s of sites) {
             try {
-              const searchResp = await client.post('/api/search', { keyword: title, site: s });
+              const searchResp = await client.post('/api/search', { keyword: searchKeyword, site: s });
               if (searchResp.data.results && searchResp.data.results.length > 0) {
                 results = searchResp.data.results;
                 foundSite = s;
@@ -239,8 +243,8 @@ app.post('/webhook', async (req, res) => {
           }
           
           if (!results || results.length === 0) {
-            queueStatus = "Not found in search";
-            console.log(`Title not found: ${title} on any of the sites: ${sites.join(', ')}`);
+            queueStatus = "Not Found";
+            console.log(`Title not found: ${searchKeyword} on any of the sites: ${siteString}`);
           } else {
             const firstResultUrl = results[0].url;
             console.log(`Found ${title} on site ${foundSite}. URL: ${firstResultUrl}`);
