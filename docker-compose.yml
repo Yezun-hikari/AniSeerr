@@ -5,7 +5,7 @@ services:
     build: .
     container_name: aniseerr-bridge
     ports:
-      - "5060:5060"
+      - "5010:5010"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
