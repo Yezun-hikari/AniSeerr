@@ -35,12 +35,25 @@ async function getAniWorldClient() {
       client.defaults.headers.Cookie = aniworldSessionCookie;
     } else {
       try {
+        // Step 1: GET /login to get CSRF token and initial session cookie
+        const getResp = await client.get('/login');
+        const initialCookie = getResp.headers['set-cookie'] ? getResp.headers['set-cookie'].map(c => c.split(';')[0]).join('; ') : '';
+        
+        // Extract CSRF token from HTML
+        const csrfMatch = getResp.data.match(/name="csrf_token" value="([^"]+)"/);
+        const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+        // Step 2: POST /login with CSRF token and initial cookie
         const formData = new URLSearchParams();
         formData.append('username', settings.aniworld_username);
         formData.append('password', settings.aniworld_password);
+        if (csrfToken) formData.append('csrf_token', csrfToken);
         
         const loginResp = await client.post('/login', formData.toString(), {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Cookie': initialCookie 
+          }
         });
         
         if (loginResp.headers['set-cookie']) {
