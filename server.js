@@ -16,23 +16,47 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+let aniworldSessionCookie = null;
+
 // Helper to get Axios instance for AniWorld
 async function getAniWorldClient() {
   const settings = await db.getSettings();
   if (!settings.aniworld_url) return null;
   
-  let auth = undefined;
+  const client = axios.create({
+    baseURL: settings.aniworld_url,
+    timeout: 10000,
+    maxRedirects: 0,
+    validateStatus: status => status >= 200 && status < 400
+  });
+  
   if (settings.aniworld_username && settings.aniworld_password) {
-    auth = {
-      username: settings.aniworld_username,
-      password: settings.aniworld_password
-    };
+    if (aniworldSessionCookie) {
+      client.defaults.headers.Cookie = aniworldSessionCookie;
+    } else {
+      try {
+        const formData = new URLSearchParams();
+        formData.append('username', settings.aniworld_username);
+        formData.append('password', settings.aniworld_password);
+        
+        const loginResp = await client.post('/login', formData.toString(), {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+        
+        if (loginResp.headers['set-cookie']) {
+          aniworldSessionCookie = loginResp.headers['set-cookie'].map(c => c.split(';')[0]).join('; ');
+          client.defaults.headers.Cookie = aniworldSessionCookie;
+          console.log("Successfully logged into AniWorld Downloader.");
+        } else {
+          console.error("Login successful but no set-cookie header received.");
+        }
+      } catch (err) {
+        console.error("Login to AniWorld failed:", err.message);
+      }
+    }
   }
   
-  return axios.create({
-    baseURL: settings.aniworld_url,
-    auth: auth
-  });
+  return client;
 }
 
 // ---------------------------------------------------------

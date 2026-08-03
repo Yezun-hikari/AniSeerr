@@ -49,7 +49,11 @@ db.serialize(() => {
     "movie_provider TEXT DEFAULT 'VOE'",
     "series_provider TEXT DEFAULT 'VOE'",
     "movie_language TEXT DEFAULT 'German Dub'",
-    "series_language TEXT DEFAULT 'German Dub'"
+    "series_language TEXT DEFAULT 'German Dub'",
+    "default_movie_path TEXT DEFAULT ''",
+    "default_series_path TEXT DEFAULT ''",
+    "aniworld_username TEXT DEFAULT ''",
+    "aniworld_password TEXT DEFAULT ''"
   ];
   
   newCols.forEach(col => {

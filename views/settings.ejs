@@ -30,15 +30,31 @@
     <div class="row">
       <div class="col-md-6 mb-3">
         <h4>Movie Preferences</h4>
-        <label class="form-label">Movie Site Priority</label>
-        <input type="text" class="form-control mb-2" name="movie_site" value="<%= settings.movie_site || 'megakino,filmpalast,cineby' %>" placeholder="megakino,filmpalast">
-        <small class="text-muted d-block mb-3">Comma separated priority list (e.g. megakino, filmpalast, cineby)</small>
+        
+        <label class="form-label">Movie Site Priority (Drag to reorder)</label>
+        <input type="hidden" name="movie_site" id="movie_site_input" value="<%= settings.movie_site || 'megakino,filmpalast,cineby' %>">
+        <ul id="movie-sortable" class="list-group mb-3" style="cursor: grab;">
+          <% const m_sites = (settings.movie_site || 'megakino,filmpalast,cineby').split(',').map(s => s.trim()).filter(Boolean); %>
+          <% m_sites.forEach(site => { %>
+             <li class="list-group-item list-group-item-dark" data-id="<%= site %>"><%= site %> ↕</li>
+          <% }); %>
+        </ul>
         
         <label class="form-label">Provider</label>
-        <input type="text" class="form-control mb-2" name="movie_provider" value="<%= settings.movie_provider || 'VOE' %>" placeholder="VOE, Filemoon, etc.">
+        <select class="form-select mb-2" name="movie_provider">
+          <option value="VOE" <%= settings.movie_provider === 'VOE' ? 'selected' : '' %>>VOE</option>
+          <option value="Vidoza" <%= settings.movie_provider === 'Vidoza' ? 'selected' : '' %>>Vidoza</option>
+          <option value="Streamtape" <%= settings.movie_provider === 'Streamtape' ? 'selected' : '' %>>Streamtape</option>
+          <option value="Doodstream" <%= settings.movie_provider === 'Doodstream' ? 'selected' : '' %>>Doodstream</option>
+        </select>
 
         <label class="form-label">Language</label>
-        <input type="text" class="form-control mb-2" name="movie_language" value="<%= settings.movie_language || 'German Dub' %>" placeholder="German Dub, English Sub, etc.">
+        <select class="form-select mb-2" name="movie_language">
+          <option value="German Dub" <%= settings.movie_language === 'German Dub' ? 'selected' : '' %>>German Dub</option>
+          <option value="English Sub" <%= settings.movie_language === 'English Sub' ? 'selected' : '' %>>English Sub</option>
+          <option value="German Sub" <%= settings.movie_language === 'German Sub' ? 'selected' : '' %>>German Sub</option>
+          <option value="English Dub" <%= settings.movie_language === 'English Dub' ? 'selected' : '' %>>English Dub</option>
+        </select>
 
         <label class="form-label">Default Download Path</label>
         <select class="form-select path-select" name="default_movie_path" data-selected="<%= settings.default_movie_path || '' %>">
@@ -48,15 +64,30 @@
 
       <div class="col-md-6 mb-3">
         <h4>Series Preferences</h4>
-        <label class="form-label">Series Site Priority</label>
-        <input type="text" class="form-control mb-2" name="series_site" value="<%= settings.series_site || 'aniworld,sto' %>" placeholder="aniworld,sto">
-        <small class="text-muted d-block mb-3">Comma separated priority list (e.g. aniworld, sto)</small>
+        <label class="form-label">Series Site Priority (Drag to reorder)</label>
+        <input type="hidden" name="series_site" id="series_site_input" value="<%= settings.series_site || 'aniworld,sto' %>">
+        <ul id="series-sortable" class="list-group mb-3" style="cursor: grab;">
+          <% const s_sites = (settings.series_site || 'aniworld,sto').split(',').map(s => s.trim()).filter(Boolean); %>
+          <% s_sites.forEach(site => { %>
+             <li class="list-group-item list-group-item-dark" data-id="<%= site %>"><%= site %> ↕</li>
+          <% }); %>
+        </ul>
 
         <label class="form-label">Provider</label>
-        <input type="text" class="form-control mb-2" name="series_provider" value="<%= settings.series_provider || 'VOE' %>" placeholder="VOE, Filemoon, etc.">
+        <select class="form-select mb-2" name="series_provider">
+          <option value="VOE" <%= (!settings.series_provider || settings.series_provider === 'VOE') ? 'selected' : '' %>>VOE</option>
+          <option value="Vidoza" <%= settings.series_provider === 'Vidoza' ? 'selected' : '' %>>Vidoza</option>
+          <option value="Streamtape" <%= settings.series_provider === 'Streamtape' ? 'selected' : '' %>>Streamtape</option>
+          <option value="Doodstream" <%= settings.series_provider === 'Doodstream' ? 'selected' : '' %>>Doodstream</option>
+        </select>
 
         <label class="form-label">Language</label>
-        <input type="text" class="form-control mb-2" name="series_language" value="<%= settings.series_language || 'German Dub' %>" placeholder="German Dub, English Sub, etc.">
+        <select class="form-select mb-2" name="series_language">
+          <option value="German Dub" <%= (!settings.series_language || settings.series_language === 'German Dub') ? 'selected' : '' %>>German Dub</option>
+          <option value="English Sub" <%= settings.series_language === 'English Sub' ? 'selected' : '' %>>English Sub</option>
+          <option value="German Sub" <%= settings.series_language === 'German Sub' ? 'selected' : '' %>>German Sub</option>
+          <option value="English Dub" <%= settings.series_language === 'English Dub' ? 'selected' : '' %>>English Dub</option>
+        </select>
 
         <label class="form-label">Default Download Path</label>
         <select class="form-select path-select" name="default_series_path" data-selected="<%= settings.default_series_path || '' %>">
@@ -70,12 +101,31 @@
   </form>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script>
-  async function fetchPaths() {
+  // Initialize Sortable Lists
+  new Sortable(document.getElementById('movie-sortable'), {
+    animation: 150,
+    onSort: function (evt) {
+      const order = Array.from(evt.to.children).map(el => el.getAttribute('data-id'));
+      document.getElementById('movie_site_input').value = order.join(',');
+    }
+  });
+
+  new Sortable(document.getElementById('series-sortable'), {
+    animation: 150,
+    onSort: function (evt) {
+      const order = Array.from(evt.to.children).map(el => el.getAttribute('data-id'));
+      document.getElementById('series_site_input').value = order.join(',');
+    }
+  });
+
+  async function fetchPaths(showAlerts = true) {
     try {
       const resp = await fetch('/api/paths');
       const data = await resp.json();
-      if (data.paths) {
+      
+      if (resp.ok && data.paths) {
         document.querySelectorAll('.path-select').forEach(select => {
           const selected = select.getAttribute('data-selected');
           select.innerHTML = '<option value="">Default Path</option>';
@@ -87,13 +137,16 @@
             select.appendChild(opt);
           });
         });
+        if (showAlerts) alert("Paths loaded successfully from AniWorld Downloader!");
+      } else {
+        if (showAlerts) alert("AniWorld API returned an error: " + (data.error || "Unknown Error"));
       }
     } catch(err) {
-      alert("Failed to load paths. Ensure AniWorld URL is correct and saved.");
+      if (showAlerts) alert("Failed to load paths. Ensure AniWorld URL is correct, saved, and the container is in the correct network.");
     }
   }
 
-  // Load paths on page load
-  window.addEventListener('load', fetchPaths);
+  // Load paths silently on page load
+  window.addEventListener('load', () => fetchPaths(false));
 </script>
 <%- include('footer') %>
