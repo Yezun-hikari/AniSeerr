@@ -98,6 +98,19 @@ app.get('/settings', async (req, res) => {
   }
 });
 
+app.post('/delete-request', async (req, res) => {
+  try {
+    const { seerr_request_id } = req.body;
+    if (seerr_request_id) {
+      await db.deleteRequest(seerr_request_id);
+    }
+    res.redirect('/');
+  } catch (err) {
+    console.error("Delete request error:", err);
+    res.redirect('/');
+  }
+});
+
 app.post('/settings', async (req, res) => {
   try {
     await db.saveSettings(req.body);
@@ -143,7 +156,7 @@ app.post('/webhook', async (req, res) => {
       notifType === 'TEST' || eventType === 'TEST' || eventType === '{{event}}' ||
       mediaStatus === 'APPROVED' || mediaStatus === 3 || reqObj.status === 'APPROVED';
 
-    const isPending = notifType === 'MEDIA_PENDING' || eventType === 'MEDIA_PENDING' || mediaStatus === 'PENDING' || reqObj.status === 'PENDING';
+    const isPending = !isApproved && (notifType === 'MEDIA_PENDING' || eventType === 'MEDIA_PENDING' || mediaStatus === 'PENDING' || reqObj.status === 'PENDING');
     const isDeclined = notifType === 'MEDIA_DECLINED' || eventType === 'MEDIA_DECLINED' || mediaStatus === 'DECLINED' || reqObj.status === 'DECLINED';
     const isAvailable = notifType === 'MEDIA_AVAILABLE' || eventType === 'MEDIA_AVAILABLE' || mediaStatus === 'AVAILABLE' || mediaStatus === 5;
 
