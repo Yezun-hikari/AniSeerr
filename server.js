@@ -274,7 +274,7 @@ app.post('/webhook', async (req, res) => {
                     }
                  }
                  
-                 const episodesResp = await client.get('/api/series', { params: { url: season.url } });
+                 const episodesResp = await client.get('/api/episodes', { params: { url: season.url } });
                  const episodes = episodesResp.data.episodes || [];
                  for (const ep of episodes) {
                     if (ep.url) {
