@@ -25,7 +25,7 @@ async function getAniWorldClient() {
   
   const client = axios.create({
     baseURL: settings.aniworld_url,
-    timeout: 10000,
+    timeout: 60000,
     maxRedirects: 0,
     validateStatus: status => status >= 200 && status < 400
   });
