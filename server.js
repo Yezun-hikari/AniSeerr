@@ -177,7 +177,7 @@ app.post('/webhook', async (req, res) => {
     const title = rawTitle + extraDetails;
     
     // Clean up title for searching (replace en-dash with hyphen, remove trailing (YYYY) year)
-    const searchKeyword = rawTitle.replace(/–/g, '-').replace(/\s*\(\d{4}\)\s*$/, '').trim();
+    const searchKeyword = rawTitle.replace(/–/g, '-').replace(/×/g, 'x').replace(/\s*\(\d{4}\)\s*$/, '').trim();
     let type = "series";
     if (mediaObj.media_type) {
        type = mediaObj.media_type.toLowerCase() === 'movie' ? 'movie' : 'series';
