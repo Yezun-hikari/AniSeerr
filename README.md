@@ -1,5 +1,9 @@
 # AniSeerr
 
+[![GitHub Release](https://img.shields.io/github/v/release/Yezun-hikari/AniSeerr?style=flat-square)](https://github.com/Yezun-hikari/AniSeerr/releases)
+[![Docker Image](https://img.shields.io/badge/docker-multi--arch-blue?style=flat-square&logo=docker)](https://github.com/Yezun-hikari/AniSeerr/pkgs/container/aniseerr)
+[![License](https://img.shields.io/github/license/Yezun-hikari/AniSeerr?style=flat-square)](https://github.com/Yezun-hikari/AniSeerr/blob/main/LICENSE)
+
 AniSeerr ist eine Brücke (Bridge) zwischen **Seerr** und dem **AniWorld Downloader**. Das Tool empfängt Webhook-Benachrichtigungen von Seerr, wenn ein neuer Film oder eine neue Serie angefragt wird, und gibt diese automatisch an den AniWorld Downloader weiter, um den Download zu starten.
 
 ## 🚀 Features
@@ -19,7 +23,9 @@ AniSeerr ist eine Brücke (Bridge) zwischen **Seerr** und dem **AniWorld Downloa
 
 ### Starten mit Docker
 
-Wenn du Docker verwendest, kannst du das Projekt einfach über die beiliegende `docker-compose.yml` starten. Passe die Ports bei Bedarf an.
+Es wird bei jedem Release automatisch ein Docker Image bereitgestellt, das sowohl für **AMD64** (klassische PCs/Server) als auch **ARM64** (Raspberry Pi, Apple Silicon, etc.) optimiert ist.
+
+Du kannst das Projekt einfach über die beiliegende `docker-compose.yml` starten. Passe die Ports bei Bedarf an.
 
 ```bash
 docker-compose up -d

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   aniseerr-bridge:
-    build: .
+    image: ghcr.io/yezun-hikari/aniseerr:latest
     container_name: aniseerr-bridge
     ports:
       - "5010:5010"
