@@ -299,9 +299,16 @@ app.post('/webhook', async (req, res) => {
                }
             }
           }
-          queueStatus = `Download Queued on ${foundSite}`;
-          console.log(queueStatus);
-          await db.addOrUpdateRequest(seerr_request_id, requester, title, type, queueStatus);
+
+          const dbStatus = queueStatus === 'success' ? `Queued on ${foundSite}` : queueStatus;
+          await db.addOrUpdateRequest(seerr_request_id, requester, title, type, dbStatus);
+          
+          if (queueStatus === 'success') {
+             console.log(`Download Queued on ${foundSite}`);
+          } else {
+             console.log(`Download failed to queue: ${queueStatus}`);
+          }
+          return res.status(200).json({ status: "OK - Approved and Processed" });
         } else {
           queueStatus = "AniWorld API Error";
           await db.addOrUpdateRequest(seerr_request_id, requester, title, type, queueStatus);
