@@ -81,7 +81,15 @@
           <option value="Doodstream" <%= settings.series_provider === 'Doodstream' ? 'selected' : '' %>>Doodstream</option>
         </select>
 
-        <label class="form-label">Language</label>
+        <label class="form-label">Anime Language</label>
+        <select class="form-select mb-2" name="anime_language">
+          <option value="German Dub" <%= (!settings.anime_language || settings.anime_language === 'German Dub') ? 'selected' : '' %>>German Dub</option>
+          <option value="English Sub" <%= settings.anime_language === 'English Sub' ? 'selected' : '' %>>English Sub</option>
+          <option value="German Sub" <%= settings.anime_language === 'German Sub' ? 'selected' : '' %>>German Sub</option>
+          <option value="English Dub" <%= settings.anime_language === 'English Dub' ? 'selected' : '' %>>English Dub</option>
+        </select>
+
+        <label class="form-label">Series Language</label>
         <select class="form-select mb-2" name="series_language">
           <option value="German Dub" <%= (!settings.series_language || settings.series_language === 'German Dub') ? 'selected' : '' %>>German Dub</option>
           <option value="English Sub" <%= settings.series_language === 'English Sub' ? 'selected' : '' %>>English Sub</option>

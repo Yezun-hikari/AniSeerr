@@ -1,0 +1,87 @@
+<%- include('header') %>
+<div class="mt-4">
+  <h2>User Exceptions</h2>
+  <p class="text-muted">By default, all requests use the global language settings. You can add users here by their Seerr username to override their language preferences for Anime, Series, and Movies.</p>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Add/Update User Exception</h5>
+      <form method="POST" action="/users/add">
+        <div class="row align-items-end">
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Seerr Username</label>
+            <input type="text" class="form-control" name="username" required placeholder="e.g. Tim">
+          </div>
+          <div class="col-md-2 mb-3">
+            <label class="form-label">Anime Lang</label>
+            <select class="form-select" name="anime_language">
+              <option value="German Dub">German Dub</option>
+              <option value="English Sub">English Sub</option>
+              <option value="German Sub">German Sub</option>
+              <option value="English Dub">English Dub</option>
+            </select>
+          </div>
+          <div class="col-md-2 mb-3">
+            <label class="form-label">Series Lang</label>
+            <select class="form-select" name="series_language">
+              <option value="German Dub">German Dub</option>
+              <option value="English Sub">English Sub</option>
+              <option value="German Sub">German Sub</option>
+              <option value="English Dub">English Dub</option>
+            </select>
+          </div>
+          <div class="col-md-2 mb-3">
+            <label class="form-label">Movie Lang</label>
+            <select class="form-select" name="movie_language">
+              <option value="German Dub">German Dub</option>
+              <option value="English Sub">English Sub</option>
+              <option value="German Sub">German Sub</option>
+              <option value="English Dub">English Dub</option>
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <button type="submit" class="btn btn-primary w-100">Save User</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <h4>Existing Exceptions</h4>
+  <div class="table-responsive">
+    <table class="table table-dark table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Anime Language</th>
+          <th>Series Language</th>
+          <th>Movie Language</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (users && users.length > 0) { %>
+          <% users.forEach(user => { %>
+            <tr>
+              <td><strong><%= user.username %></strong></td>
+              <td><%= user.anime_language %></td>
+              <td><%= user.series_language %></td>
+              <td><%= user.movie_language %></td>
+              <td>
+                <form method="POST" action="/users/delete" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this exception?');">
+                  <input type="hidden" name="id" value="<%= user.id %>">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        <% } else { %>
+          <tr>
+            <td colspan="5" class="text-center text-muted">No user exceptions found.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('footer') %>

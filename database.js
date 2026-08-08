@@ -26,7 +26,19 @@ db.serialize(() => {
       movie_provider TEXT DEFAULT 'VOE',
       series_provider TEXT DEFAULT 'VOE',
       movie_language TEXT DEFAULT 'German Dub',
-      series_language TEXT DEFAULT 'German Dub'
+      series_language TEXT DEFAULT 'German Dub',
+      anime_language TEXT DEFAULT 'German Dub'
+    )
+  `);
+
+  // Users table for language exceptions
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      anime_language TEXT DEFAULT 'German Dub',
+      series_language TEXT DEFAULT 'German Dub',
+      movie_language TEXT DEFAULT 'German Dub'
     )
   `);
 
@@ -50,6 +62,7 @@ db.serialize(() => {
     "series_provider TEXT DEFAULT 'VOE'",
     "movie_language TEXT DEFAULT 'German Dub'",
     "series_language TEXT DEFAULT 'German Dub'",
+    "anime_language TEXT DEFAULT 'German Dub'",
     "default_movie_path TEXT DEFAULT ''",
     "default_series_path TEXT DEFAULT ''",
     "aniworld_username TEXT DEFAULT ''",
@@ -90,13 +103,14 @@ function saveSettings(settings) {
       movie_provider,
       series_provider,
       movie_language,
-      series_language
+      series_language,
+      anime_language
     } = settings;
 
     db.run(
-      `INSERT INTO settings (seerr_url, seerr_api_key, aniworld_url, aniworld_username, aniworld_password, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [seerr_url, seerr_api_key, aniworld_url, aniworld_username, aniworld_password, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language],
+      `INSERT INTO settings (seerr_url, seerr_api_key, aniworld_url, aniworld_username, aniworld_password, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language, anime_language)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [seerr_url, seerr_api_key, aniworld_url, aniworld_username, aniworld_password, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language, anime_language],
       function (err) {
         if (err) reject(err);
         else resolve(this.lastID);
@@ -167,10 +181,72 @@ function getRequests() {
   });
 }
 
+// Helper to get all user exceptions
+function getUsers() {
+  return new Promise((resolve, reject) => {
+    db.all('SELECT * FROM users ORDER BY username ASC', (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows || []);
+    });
+  });
+}
+
+// Helper to get a specific user by username
+function getUserByUsername(username) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+// Helper to add or update a user exception
+function addOrUpdateUser(username, anime_language, series_language, movie_language) {
+  return new Promise((resolve, reject) => {
+    db.get('SELECT id FROM users WHERE username = ?', [username], (err, row) => {
+      if (err) return reject(err);
+      if (row) {
+        db.run(
+          'UPDATE users SET anime_language = ?, series_language = ?, movie_language = ? WHERE username = ?',
+          [anime_language, series_language, movie_language, username],
+          function (err) {
+            if (err) reject(err);
+            else resolve(row.id);
+          }
+        );
+      } else {
+        db.run(
+          'INSERT INTO users (username, anime_language, series_language, movie_language) VALUES (?, ?, ?, ?)',
+          [username, anime_language, series_language, movie_language],
+          function (err) {
+            if (err) reject(err);
+            else resolve(this.lastID);
+          }
+        );
+      }
+    });
+  });
+}
+
+// Helper to delete a user exception
+function deleteUser(id) {
+  return new Promise((resolve, reject) => {
+    db.run('DELETE FROM users WHERE id = ?', [id], function (err) {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
+
 module.exports = {
   getSettings,
   saveSettings,
   addOrUpdateRequest,
   deleteRequest,
-  getRequests
+  getRequests,
+  getUsers,
+  getUserByUsername,
+  addOrUpdateUser,
+  deleteUser
 };

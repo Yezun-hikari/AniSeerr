@@ -120,6 +120,41 @@ app.post('/settings', async (req, res) => {
   }
 });
 
+app.get('/users', async (req, res) => {
+  try {
+    const users = await db.getUsers();
+    res.render('users', { users });
+  } catch (err) {
+    res.status(500).send("Error loading users.");
+  }
+});
+
+app.post('/users/add', async (req, res) => {
+  try {
+    const { username, anime_language, series_language, movie_language } = req.body;
+    if (username) {
+      await db.addOrUpdateUser(username, anime_language, series_language, movie_language);
+    }
+    res.redirect('/users');
+  } catch (err) {
+    console.error("Add user error:", err);
+    res.redirect('/users');
+  }
+});
+
+app.post('/users/delete', async (req, res) => {
+  try {
+    const { id } = req.body;
+    if (id) {
+      await db.deleteUser(id);
+    }
+    res.redirect('/users');
+  } catch (err) {
+    console.error("Delete user error:", err);
+    res.redirect('/users');
+  }
+});
+
 app.get('/api/paths', async (req, res) => {
   try {
     const client = await getAniWorldClient();
@@ -223,8 +258,10 @@ app.post('/webhook', async (req, res) => {
           const siteString = type === 'movie' ? (settings.movie_site || 'megakino,filmpalast,cineby') : (settings.series_site || 'aniworld,sto');
           const sites = siteString.split(',').map(s => s.trim()).filter(s => s);
           const provider = type === 'movie' ? (settings.movie_provider || 'VOE') : (settings.series_provider || 'VOE');
-          const language = type === 'movie' ? (settings.movie_language || 'German Dub') : (settings.series_language || 'German Dub');
           
+          // Get specific user preferences if they exist
+          const userException = await db.getUserByUsername(requester);
+
           let results = null;
           let foundSite = null;
 
@@ -249,11 +286,23 @@ app.post('/webhook', async (req, res) => {
             const firstResultUrl = results[0].url;
             console.log(`Found ${title} on site ${foundSite}. URL: ${firstResultUrl}`);
             
+            // Determine the actual language to use
+            let languageToUse = 'German Dub';
+            if (type === 'movie') {
+              languageToUse = userException ? userException.movie_language : (settings.movie_language || 'German Dub');
+            } else {
+              if (foundSite === 'aniworld') {
+                languageToUse = userException ? userException.anime_language : (settings.anime_language || 'German Dub');
+              } else {
+                languageToUse = userException ? userException.series_language : (settings.series_language || 'German Dub');
+              }
+            }
+            
             if (type === 'movie') {
                // Queue movie directly using /api/download
                await client.post('/api/download', {
                  episodes: [firstResultUrl],
-                 language: language,
+                 language: languageToUse,
                  provider: provider,
                  title: title,
                  series_url: firstResultUrl,
@@ -286,7 +335,7 @@ app.post('/webhook', async (req, res) => {
                if (allEpisodes.length > 0) {
                  await client.post('/api/download', {
                    episodes: allEpisodes,
-                   language: language,
+                   language: languageToUse,
                    provider: provider,
                    title: title,
                    series_url: firstResultUrl,

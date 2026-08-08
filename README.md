@@ -4,82 +4,110 @@
 [![Docker Image](https://img.shields.io/badge/docker-multi--arch-blue?style=flat-square&logo=docker)](https://github.com/Yezun-hikari/AniSeerr/pkgs/container/aniseerr)
 [![License](https://img.shields.io/github/license/Yezun-hikari/AniSeerr?style=flat-square)](https://github.com/Yezun-hikari/AniSeerr/blob/main/LICENSE)
 
-AniSeerr ist eine Brücke (Bridge) zwischen **Seerr** und dem **AniWorld Downloader**. Das Tool empfängt Webhook-Benachrichtigungen von Seerr, wenn ein neuer Film oder eine neue Serie angefragt wird, und gibt diese automatisch an den AniWorld Downloader weiter, um den Download zu starten.
+AniSeerr is a bridge between **Seerr** and the **AniWorld Downloader**. The tool receives webhook notifications from Seerr when a new movie or series is requested, and automatically passes them to the AniWorld Downloader to start the download.
 
 ## 🚀 Features
 
-- **Nahtlose Integration:** Verbindet Seerr direkt mit dem AniWorld Downloader.
-- **Vollautomatisch:** Sucht und reiht genehmigte (Approved) Anfragen automatisch in die Download-Warteschlange ein.
-- **Status-Tracking:** Verfolgt ausstehende (Pending), abgelehnte (Declined) und verfügbare (Available) Anfragen übersichtlich in einem eigenen Web-Interface.
+- **Seamless Integration:** Connects Seerr directly with the AniWorld Downloader.
+- **Fully Automated:** Searches and queues approved requests automatically into the download queue.
+- **Status Tracking:** Tracks pending, declined, and available requests clearly in its own web interface.
 
 ---
 
 ## 🛠️ Installation & Setup
 
-### Voraussetzungen
-- Ein laufender Seerr Server.
-- Ein laufender AniWorld Downloader.
-- Docker & Docker Compose (empfohlen).
+### Prerequisites
+- A running Seerr Server.
+- A running AniWorld Downloader.
+- Docker & Docker Compose (recommended).
 
-### Starten mit Docker
+### Starting with Docker
 
-Es wird bei jedem Release automatisch ein Docker Image bereitgestellt, das sowohl für **AMD64** (klassische PCs/Server) als auch **ARM64** (Raspberry Pi, Apple Silicon, etc.) optimiert ist.
+A Docker image is automatically provided with every release, optimized for both **AMD64** (classic PCs/Servers) and **ARM64** (Raspberry Pi, Apple Silicon, etc.).
 
-Du kannst das Projekt einfach über die beiliegende `docker-compose.yml` starten. Passe die Ports bei Bedarf an.
+You can simply start the project using the included `docker-compose.yml`. Adjust the ports if necessary.
 
 ```bash
 docker-compose up -d
 ```
 
-Nach dem Start ist das AniSeerr Web-Interface unter `http://<DEINE_IP>:5010` erreichbar. Dort kannst du unter **Settings** die Zugangsdaten, Präferenzen und URLs für deinen AniWorld Downloader konfigurieren.
+After starting, the AniSeerr web interface is available at `http://<YOUR_IP>:5010`. There, under **Settings**, you can configure the credentials, preferences, and URLs for your AniWorld Downloader.
 
 ---
 
-## 🔗 Konfiguration in Seerr
+## 🔗 Configuration in Seerr
 
-Damit AniSeerr weiß, wann neue Medien angefragt werden, muss ein Webhook in Seerr eingerichtet werden.
+For AniSeerr to know when new media is requested, a webhook must be set up in Seerr.
 
-1. Öffne Seerr und navigiere zu **Einstellungen > Benachrichtigungen** (Settings > Notifications).
-2. Klicke auf **Webhook**.
-3. Setze den Haken bei **Dienst aktivieren** (Enable Agent).
+1. Open Seerr and navigate to **Settings > Notifications**.
+2. Click on **Webhook**.
+3. Check the box for **Enable Agent**.
 
-### 1. Webhook-URL & Virtuelle Netzwerke (Docker)
-Die Webhook-URL hängt davon ab, wie deine Container miteinander kommunizieren:
+### 1. Webhook URL & Virtual Networks (Docker)
+The Webhook URL depends on how your containers communicate with each other:
 
-* **Standard / Host-IP:** Laufen die Tools nicht im selben Netzwerk, trage die IP-Adresse des Servers ein: `http://<DEINE_SERVER_IP>:5010/webhook`
-* **Virtuelles Docker-Netzwerk (Empfohlen):** Wenn Seerr im **selben Docker-Netzwerk** (Custom Bridge Network) laufen, können sie direkt über den Container-Namen kommunizieren. Das ist die sicherste und sauberste Methode, da der Traffic das Docker-Netzwerk nicht verlässt. 
-  Trage in diesem Fall als Webhook-URL den Namen des AniSeerr-Containers ein, z. B.:
+* **Default / Host IP:** If the tools are not running in the same network, enter the IP address of the server: `http://<YOUR_SERVER_IP>:5010/webhook`
+* **Virtual Docker Network (Recommended):** If Seerr is running in the **same Docker network** (Custom Bridge Network), they can communicate directly via the container name. This is the safest and cleanest method, as the traffic does not leave the Docker network.
+  In this case, enter the name of the AniSeerr container as the Webhook URL, e.g.:
   `http://aniseerr:5010/webhook`
 
-### 2. JSON-Inhalt (Payload)
-Der JSON-Inhalt kann komplett auf dem **Standard (Default)** belassen werden. AniSeerr versteht das standardmäßige Seerr JSON-Format.
+### 2. JSON Payload
+The JSON Payload can be left entirely on the **Default**. AniSeerr understands the standard Seerr JSON format.
 
-### 3. Benachrichtigungstypen (Notification Types)
-Damit AniSeerr den Status von Anfragen korrekt mitverfolgen und Downloads starten kann, müssen **genau diese fünf Benachrichtigungstypen** angehakt werden (genau wie auf deinem Screenshot):
+### 3. Notification Types
+For AniSeerr to correctly track the status of requests and start downloads, **exactly these five notification types** must be checked:
 
-- [x] **Genehmigung ausstehend** (Request Pending)
-- [x] **Anfrage automatisch genehmigt** (Request Auto-Approved)
-- [x] **Anfrage genehmigt** (Request Approved)
-- [x] **Anfrage abgelehnt** (Request Declined)
-- [x] **Anfrage verfügbar** (Request Available)
+- [x] **Request Pending**
+- [x] **Request Auto-Approved**
+- [x] **Request Approved**
+- [x] **Request Declined**
+- [x] **Request Available**
 
-Alle anderen Haken (wie "Problem gemeldet" etc.) können deaktiviert bleiben, da AniSeerr diese Ereignisse nicht verarbeitet.
+All other boxes (like "Issue Reported", etc.) can remain unchecked, as AniSeerr does not process these events.
 
-### 4. Testen
-Klicke ganz unten in Seerr auf **Testen**. Wenn alles korrekt eingerichtet ist, solltest du in den **Logs** von AniSeerr sehen, dass es die Test-Anfrage empfangen hat.
-
----
-
-## 💻 Technischer Ablauf (Wie es funktioniert)
-
-1. Seerr sendet einen Webhook (z.B. "Anfrage genehmigt").
-2. AniSeerr empfängt den Webhook und filtert den Titel der Serie/des Films heraus.
-3. AniSeerr kommuniziert über die `/api/search` Schnittstelle mit dem AniWorld Downloader und sucht nach dem Titel.
-4. Wird der Titel gefunden, sendet AniSeerr einen Download-Befehl über `/api/download` an den Downloader.
-5. Der **AniWorld Downloader** baut dann selbstständig die Verbindungen zu den Streaming-Seiten (Hostern) auf und lädt die Videodateien herunter.
+### 4. Testing
+Click **Test** at the very bottom of Seerr. If everything is set up correctly, you should see in the **Logs** of AniSeerr that it received the test request.
 
 ---
 
-## 📄 Lizenz
+## 💻 Technical Workflow (How it works)
 
-Dieses Projekt ist unter der [MIT Lizenz](LICENSE) lizenziert.
+1. Seerr sends a webhook (e.g., "Request Approved").
+2. AniSeerr receives the webhook and extracts the title of the series/movie.
+3. AniSeerr communicates with the AniWorld Downloader via the `/api/search` endpoint and searches for the title.
+4. If the title is found, AniSeerr sends a download command via `/api/download` to the downloader.
+5. The **AniWorld Downloader** then independently establishes connections to the streaming sites (hosters).
+
+## Supported Providers
+* VOE
+* Vidoza
+* Streamtape
+* Doodstream
+
+---
+
+## 🌎 Global Language Settings & User Exceptions
+
+### Global Language Settings
+By default, AniSeerr Bridge applies your global language settings to downloaded media.
+- **Anime Language**: Applied when the media is downloaded from `aniworld`.
+- **Series Language**: Applied when downloading a series from other sites (e.g., `sto`).
+- **Movie Language**: Applied when downloading a movie.
+
+You can configure these global defaults on the **Settings** page.
+
+### User Exceptions
+If multiple users use Seerr and prefer different languages (e.g., one user prefers English Dub for Anime, while another prefers Japanese Sub), you can set up **User Exceptions**.
+
+1. Navigate to the **Users (Exceptions)** page via the top navigation bar.
+2. Enter the user's **exact Seerr Username** (case-sensitive).
+3. Select their preferred language for Anime, normal Series, and Movies.
+4. Click **Save User**.
+
+When this user requests media in Seerr, AniSeerr Bridge will prioritize their specific language settings over the global defaults. If a user is not listed in the exceptions, the global settings will be used.
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
