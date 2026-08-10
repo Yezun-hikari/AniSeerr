@@ -16,58 +16,23 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-let aniworldSessionCookie = null;
-
 // Helper to get Axios instance for AniWorld
 async function getAniWorldClient() {
   const settings = await db.getSettings();
   if (!settings.aniworld_url) return null;
   
+  const headers = {};
+  if (settings.aniworld_api_key) {
+    headers['X-API-Key'] = settings.aniworld_api_key;
+  }
+  
   const client = axios.create({
     baseURL: settings.aniworld_url,
+    headers: headers,
     timeout: 60000,
     maxRedirects: 0,
     validateStatus: status => status >= 200 && status < 400
   });
-  
-  if (settings.aniworld_username && settings.aniworld_password) {
-    if (aniworldSessionCookie) {
-      client.defaults.headers.Cookie = aniworldSessionCookie;
-    } else {
-      try {
-        // Step 1: GET /login to get CSRF token and initial session cookie
-        const getResp = await client.get('/login');
-        const initialCookie = getResp.headers['set-cookie'] ? getResp.headers['set-cookie'].map(c => c.split(';')[0]).join('; ') : '';
-        
-        // Extract CSRF token from HTML
-        const csrfMatch = getResp.data.match(/name="csrf_token" value="([^"]+)"/);
-        const csrfToken = csrfMatch ? csrfMatch[1] : '';
-
-        // Step 2: POST /login with CSRF token and initial cookie
-        const formData = new URLSearchParams();
-        formData.append('username', settings.aniworld_username);
-        formData.append('password', settings.aniworld_password);
-        if (csrfToken) formData.append('csrf_token', csrfToken);
-        
-        const loginResp = await client.post('/login', formData.toString(), {
-          headers: { 
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Cookie': initialCookie 
-          }
-        });
-        
-        if (loginResp.headers['set-cookie']) {
-          aniworldSessionCookie = loginResp.headers['set-cookie'].map(c => c.split(';')[0]).join('; ');
-          client.defaults.headers.Cookie = aniworldSessionCookie;
-          console.log("Successfully logged into AniWorld Downloader.");
-        } else {
-          console.error("Login successful but no set-cookie header received.");
-        }
-      } catch (err) {
-        console.error("Login to AniWorld failed:", err.message);
-      }
-    }
-  }
   
   return client;
 }
@@ -377,5 +342,5 @@ app.post('/webhook', async (req, res) => {
 
 // Start Server
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`AniSeerr Bridge running on http://localhost:${PORT}`);
+  console.log(`AniSeerr running on http://localhost:${PORT}`);
 });

@@ -89,7 +89,7 @@ Click **Test** at the very bottom of Seerr. If everything is set up correctly, y
 ## 🌎 Global Language Settings & User Exceptions
 
 ### Global Language Settings
-By default, AniSeerr Bridge applies your global language settings to downloaded media.
+By default, AniSeerr applies your global language settings to downloaded media.
 - **Anime Language**: Applied when the media is downloaded from `aniworld`.
 - **Series Language**: Applied when downloading a series from other sites (e.g., `sto`).
 - **Movie Language**: Applied when downloading a movie.
@@ -104,7 +104,7 @@ If multiple users use Seerr and prefer different languages (e.g., one user prefe
 3. Select their preferred language for Anime, normal Series, and Movies.
 4. Click **Save User**.
 
-When this user requests media in Seerr, AniSeerr Bridge will prioritize their specific language settings over the global defaults. If a user is not listed in the exceptions, the global settings will be used.
+When this user requests media in Seerr, AniSeerr will prioritize their specific language settings over the global defaults. If a user is not listed in the exceptions, the global settings will be used.
 
 ---
 

@@ -17,8 +17,7 @@ db.serialize(() => {
       seerr_url TEXT,
       seerr_api_key TEXT,
       aniworld_url TEXT,
-      aniworld_username TEXT,
-      aniworld_password TEXT,
+      aniworld_api_key TEXT,
       default_movie_path TEXT,
       default_series_path TEXT,
       movie_site TEXT DEFAULT 'megakino',
@@ -65,8 +64,7 @@ db.serialize(() => {
     "anime_language TEXT DEFAULT 'German Dub'",
     "default_movie_path TEXT DEFAULT ''",
     "default_series_path TEXT DEFAULT ''",
-    "aniworld_username TEXT DEFAULT ''",
-    "aniworld_password TEXT DEFAULT ''"
+    "aniworld_api_key TEXT DEFAULT ''"
   ];
   
   newCols.forEach(col => {
@@ -94,8 +92,7 @@ function saveSettings(settings) {
       seerr_url,
       seerr_api_key,
       aniworld_url,
-      aniworld_username,
-      aniworld_password,
+      aniworld_api_key,
       default_movie_path,
       default_series_path,
       movie_site,
@@ -108,9 +105,9 @@ function saveSettings(settings) {
     } = settings;
 
     db.run(
-      `INSERT INTO settings (seerr_url, seerr_api_key, aniworld_url, aniworld_username, aniworld_password, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language, anime_language)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [seerr_url, seerr_api_key, aniworld_url, aniworld_username, aniworld_password, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language, anime_language],
+      `INSERT INTO settings (seerr_url, seerr_api_key, aniworld_url, aniworld_api_key, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language, anime_language)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [seerr_url, seerr_api_key, aniworld_url, aniworld_api_key, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language, anime_language],
       function (err) {
         if (err) reject(err);
         else resolve(this.lastID);

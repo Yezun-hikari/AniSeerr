@@ -13,17 +13,13 @@
     <!-- Seerr settings removed as they are not needed for webhook push -->
     
     <div class="row">
-      <div class="col-md-4 mb-3">
+      <div class="col-md-6 mb-3">
         <label class="form-label">AniWorld-Downloader URL</label>
         <input type="text" class="form-control" name="aniworld_url" id="aniworld_url" value="<%= settings.aniworld_url || '' %>" placeholder="http://localhost:8080" required>
       </div>
-      <div class="col-md-4 mb-3">
-        <label class="form-label">AniWorld Username</label>
-        <input type="text" class="form-control" name="aniworld_username" value="<%= settings.aniworld_username || '' %>">
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="form-label">AniWorld Password</label>
-        <input type="password" class="form-control" name="aniworld_password" value="<%= settings.aniworld_password || '' %>">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">AniWorld API Key</label>
+        <input type="password" class="form-control" name="aniworld_api_key" value="<%= settings.aniworld_api_key || '' %>" placeholder="awd_...">
       </div>
     </div>
 

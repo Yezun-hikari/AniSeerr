@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  aniseerr-bridge:
+  aniseerr:
     image: ghcr.io/yezun-hikari/aniseerr:latest
-    container_name: aniseerr-bridge
+    container_name: aniseerr
     ports:
       - "5010:5010"
     volumes:

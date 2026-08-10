@@ -1,7 +1,7 @@
 {
-  "name": "aniseerr-bridge",
+  "name": "aniseerr",
   "version": "1.0.0",
-  "description": "Bridge between Seerr and AniWorld-Downloader",
+  "description": "Connects Seerr and AniWorld-Downloader",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
