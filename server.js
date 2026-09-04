@@ -21,18 +21,19 @@ async function getAniWorldClient() {
   const settings = await db.getSettings();
   if (!settings.aniworld_url) return null;
   
-  const headers = {};
-  if (settings.aniworld_api_key) {
-    headers['X-API-Key'] = settings.aniworld_api_key;
-  }
-  
   const client = axios.create({
     baseURL: settings.aniworld_url,
-    headers: headers,
     timeout: 60000,
     maxRedirects: 0,
     validateStatus: status => status >= 200 && status < 400
   });
+  
+  if (settings.aniworld_api_key) {
+    client.interceptors.request.use(config => {
+      config.headers['X-API-Key'] = settings.aniworld_api_key.trim();
+      return config;
+    });
+  }
   
   return client;
 }
