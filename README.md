@@ -17,8 +17,8 @@ AniSeerr is a bridge between **Seerr** and the **AniWorld Downloader**. The tool
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
-- A running Seerr Server.
-- A running AniWorld Downloader.
+- A running [Seerr Server](https://github.com/seerr-team/seerr).
+- A running [AniWorld Downloader](https://github.com/phoenixthrush/AniWorld-Downloader).
 - Docker & Docker Compose (recommended).
 
 ### Starting with Docker
@@ -77,12 +77,6 @@ Click **Test** at the very bottom of Seerr. If everything is set up correctly, y
 3. AniSeerr communicates with the AniWorld Downloader via the `/api/search` endpoint and searches for the title.
 4. If the title is found, AniSeerr sends a download command via `/api/download` to the downloader.
 5. The **AniWorld Downloader** then independently establishes connections to the streaming sites (hosters).
-
-## Supported Providers
-* VOE
-* Vidoza
-* Streamtape
-* Doodstream
 
 ---
 
