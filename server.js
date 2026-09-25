@@ -337,6 +337,8 @@ app.post('/webhook', async (req, res) => {
             const seasons = seasonsResp.data.seasons || [];
 
             let allEpisodes = [];
+            const seasonPromises = [];
+
             for (const season of seasons) {
               if (requestedSeasons.length > 0 && season.season_number !== undefined && season.season_number !== null) {
                 if (!requestedSeasons.includes(parseInt(season.season_number, 10))) {
@@ -345,19 +347,24 @@ app.post('/webhook', async (req, res) => {
                 }
               }
 
-              try {
-                const episodesResp = await client.get('/api/episodes', {
-                  params: { url: season.url, series_url: firstResultUrl }
-                });
+              const promise = client.get('/api/episodes', {
+                params: { url: season.url, series_url: firstResultUrl }
+              })
+              .then(episodesResp => {
                 const episodes = episodesResp.data.episodes || [];
-                for (const ep of episodes) {
-                  if (ep.url) {
-                    allEpisodes.push(ep.url);
-                  }
-                }
-              } catch (epErr) {
+                return episodes.map(ep => ep.url).filter(Boolean);
+              })
+              .catch(epErr => {
                 console.error(`Failed to fetch episodes for season URL ${season.url}:`, epErr.message);
-              }
+                return [];
+              });
+
+              seasonPromises.push(promise);
+            }
+
+            const results = await Promise.all(seasonPromises);
+            for (const epList of results) {
+              allEpisodes.push(...epList);
             }
 
             if (allEpisodes.length > 0) {
