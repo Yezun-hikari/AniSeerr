@@ -53,7 +53,9 @@ db.serialize(() => {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-  // Ensure columns exist if table was already created
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_requests_seerr_request_id ON requests(seerr_request_id)`);
+
   const newCols = [
     "movie_site TEXT DEFAULT 'megakino'",
     "series_site TEXT DEFAULT 'sto'",
@@ -75,7 +77,6 @@ db.serialize(() => {
   });
 });
 
-// Helper to get settings
 function getSettings() {
   return new Promise((resolve, reject) => {
     db.get('SELECT * FROM settings ORDER BY id DESC LIMIT 1', (err, row) => {
@@ -85,7 +86,6 @@ function getSettings() {
   });
 }
 
-// Helper to save settings
 function saveSettings(settings) {
   return new Promise((resolve, reject) => {
     const {
@@ -116,7 +116,6 @@ function saveSettings(settings) {
   });
 }
 
-// Helper to add a request
 function addRequest(seerr_request_id, requester, title, type, status) {
   return new Promise((resolve, reject) => {
     db.run(
@@ -130,7 +129,6 @@ function addRequest(seerr_request_id, requester, title, type, status) {
   });
 }
 
-// Helper to add or update a request
 function addOrUpdateRequest(seerr_request_id, requester, title, type, status) {
   return new Promise((resolve, reject) => {
     db.get(`SELECT id FROM requests WHERE seerr_request_id = ?`, [seerr_request_id], (err, row) => {
@@ -158,7 +156,6 @@ function addOrUpdateRequest(seerr_request_id, requester, title, type, status) {
   });
 }
 
-// Helper to delete a request
 function deleteRequest(seerr_request_id) {
   return new Promise((resolve, reject) => {
     db.run(`DELETE FROM requests WHERE seerr_request_id = ?`, [seerr_request_id], function(err) {
@@ -168,7 +165,6 @@ function deleteRequest(seerr_request_id) {
   });
 }
 
-// Helper to get all requests
 function getRequests() {
   return new Promise((resolve, reject) => {
     db.all('SELECT * FROM requests ORDER BY timestamp DESC', (err, rows) => {
@@ -178,7 +174,6 @@ function getRequests() {
   });
 }
 
-// Helper to get all user exceptions
 function getUsers() {
   return new Promise((resolve, reject) => {
     db.all('SELECT * FROM users ORDER BY username ASC', (err, rows) => {
@@ -188,7 +183,6 @@ function getUsers() {
   });
 }
 
-// Helper to get a specific user by username
 function getUserByUsername(username) {
   return new Promise((resolve, reject) => {
     db.get('SELECT * FROM users WHERE username = ?', [username], (err, row) => {
@@ -198,7 +192,6 @@ function getUserByUsername(username) {
   });
 }
 
-// Helper to add or update a user exception
 function addOrUpdateUser(username, anime_language, series_language, movie_language) {
   return new Promise((resolve, reject) => {
     db.get('SELECT id FROM users WHERE username = ?', [username], (err, row) => {
@@ -226,7 +219,6 @@ function addOrUpdateUser(username, anime_language, series_language, movie_langua
   });
 }
 
-// Helper to delete a user exception
 function deleteUser(id) {
   return new Promise((resolve, reject) => {
     db.run('DELETE FROM users WHERE id = ?', [id], function (err) {
