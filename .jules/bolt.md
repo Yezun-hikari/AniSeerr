@@ -5,3 +5,7 @@
 ## 2024-05-24 - Missing SQLite Indexes for Webhook Queries
 **Learning:** The database uses `seerr_request_id` as the primary lookup mechanism for webhook events (checking if a request exists, updating its status, or deleting it). Without an index on `seerr_request_id`, these queries require full table scans on the `requests` table, which can become a bottleneck as the table grows over time. Adding a simple `CREATE INDEX` sped up simulated lookups by ~5-6x in tests.
 **Action:** Always verify that frequently queried fields (especially those used in `WHERE` clauses for `SELECT`, `UPDATE`, or `DELETE`) have appropriate database indexes, even in lightweight SQLite environments.
+
+## 2024-05-20 - API Client Memoization & Connection Pooling
+**Learning:** In Node.js applications making multiple sequential requests to the same external API (e.g., searching, fetching episodes, queuing downloads), creating a new Axios instance for every webhook without Keep-Alive discards connection pools. This causes costly TCP/TLS handshakes for every single request, significantly slowing down webhook processing. Additionally, frequently accessed single-row configurations like `settings` cause redundant database I/O.
+**Action:** Memoize the Axios client instance based on connection settings, explicitly configure `httpAgent` and `httpsAgent` with `keepAlive: true` to reuse connections, and cache frequently read database configuration in memory.
