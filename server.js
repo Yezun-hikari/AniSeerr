@@ -2,10 +2,21 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const path = require('path');
+const http = require('http');
+const https = require('https');
 const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 5010;
+
+// Setup connection pooling agents for performance
+const httpAgent = new http.Agent({ keepAlive: true });
+const httpsAgent = new https.Agent({ keepAlive: true });
+
+// Cache for Axios client instance
+let cachedAxiosClient = null;
+let cachedAniWorldUrl = null;
+let cachedAniWorldApiKey = null;
 
 // Setup EJS
 app.set('view engine', 'ejs');
@@ -16,28 +27,44 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Helper to get Axios instance for AniWorld Downloader
-async function getAniWorldClient() {
-  const settings = await db.getSettings();
+// Memoized client prevents redundant TCP/TLS handshakes, improving performance by caching the connection.
+async function getAniWorldClient(providedSettings = null) {
+  const settings = providedSettings || await db.getSettings();
   if (!settings.aniworld_url) return null;
 
-  let baseURL = settings.aniworld_url.trim();
+  const currentUrl = settings.aniworld_url.trim();
+  const currentApiKey = (settings.aniworld_api_key || '').trim();
+
+  // Return cached client if config matches
+  if (cachedAxiosClient && currentUrl === cachedAniWorldUrl && currentApiKey === cachedAniWorldApiKey) {
+    return cachedAxiosClient;
+  }
+
+  let baseURL = currentUrl;
   if (!baseURL.startsWith('http://') && !baseURL.startsWith('https://')) {
     baseURL = `http://${baseURL}`;
   }
   baseURL = baseURL.replace(/\/+$/, '');
 
   const headers = {};
-  if (settings.aniworld_api_key && settings.aniworld_api_key.trim()) {
-    headers['X-API-Key'] = settings.aniworld_api_key.trim();
+  if (currentApiKey) {
+    headers['X-API-Key'] = currentApiKey;
   }
 
-  return axios.create({
+  cachedAniWorldUrl = currentUrl;
+  cachedAniWorldApiKey = currentApiKey;
+
+  cachedAxiosClient = axios.create({
     baseURL,
     timeout: 60000,
     headers,
+    httpAgent,
+    httpsAgent,
     maxRedirects: 5,
     validateStatus: status => status >= 200 && status < 400
   });
+
+  return cachedAxiosClient;
 }
 
 // Helper to parse search title from Seerr webhook subject/title
@@ -248,7 +275,8 @@ app.post('/webhook', async (req, res) => {
 
       let queueStatus = "success";
       try {
-        const client = await getAniWorldClient();
+        const settings = await db.getSettings();
+        const client = await getAniWorldClient(settings);
         if (!client) {
           queueStatus = "AniWorld URL not configured";
           if (seerr_request_id) {
@@ -257,7 +285,6 @@ app.post('/webhook', async (req, res) => {
           return res.status(400).json({ error: queueStatus });
         }
 
-        const settings = await db.getSettings();
         const customPathStr = type === 'movie' ? settings.default_movie_path : settings.default_series_path;
         const customPathId = customPathStr ? parseInt(customPathStr, 10) : null;
 
