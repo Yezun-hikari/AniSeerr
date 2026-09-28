@@ -9,3 +9,7 @@
 ## 2024-05-20 - API Client Memoization & Connection Pooling
 **Learning:** In Node.js applications making multiple sequential requests to the same external API (e.g., searching, fetching episodes, queuing downloads), creating a new Axios instance for every webhook without Keep-Alive discards connection pools. This causes costly TCP/TLS handshakes for every single request, significantly slowing down webhook processing. Additionally, frequently accessed single-row configurations like `settings` cause redundant database I/O.
 **Action:** Memoize the Axios client instance based on connection settings, explicitly configure `httpAgent` and `httpsAgent` with `keepAlive: true` to reuse connections, and cache frequently read database configuration in memory.
+
+## 2024-05-24 - Database I/O Overhead in Settings Lookups
+**Learning:** In Node.js applications using SQLite, querying the same table repeatedly for configuration data (like `getSettings()`) introduces unnecessary I/O overhead. This is especially true when settings are read frequently but updated rarely.
+**Action:** Always consider memoizing or caching database queries for application-wide configuration data to improve performance, ensuring proper cache invalidation on updates.
