@@ -77,11 +77,22 @@ db.serialize(() => {
   });
 });
 
+// Cache for settings to prevent redundant SQLite queries, improving performance
+// Expected Impact: Reduces database I/O for frequent operations by returning in-memory object instantly.
+let settingsCache = null;
+
 function getSettings() {
   return new Promise((resolve, reject) => {
+    if (settingsCache) {
+      return resolve(settingsCache);
+    }
     db.get('SELECT * FROM settings ORDER BY id DESC LIMIT 1', (err, row) => {
-      if (err) reject(err);
-      else resolve(row || {});
+      if (err) {
+        reject(err);
+      } else {
+        settingsCache = row || {};
+        resolve(settingsCache);
+      }
     });
   });
 }
@@ -109,8 +120,13 @@ function saveSettings(settings) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [seerr_url, seerr_api_key, aniworld_url, aniworld_api_key, default_movie_path, default_series_path, movie_site, series_site, movie_provider, series_provider, movie_language, series_language, anime_language],
       function (err) {
-        if (err) reject(err);
-        else resolve(this.lastID);
+        if (err) {
+          reject(err);
+        } else {
+          // Invalidate cache on new settings save
+          settingsCache = null;
+          resolve(this.lastID);
+        }
       }
     );
   });
