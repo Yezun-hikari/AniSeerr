@@ -55,6 +55,7 @@ db.serialize(() => {
   `);
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_requests_seerr_request_id ON requests(seerr_request_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_requests_timestamp ON requests(timestamp)`);
 
   const newCols = [
     "movie_site TEXT DEFAULT 'megakino'",
@@ -181,9 +182,11 @@ function deleteRequest(seerr_request_id) {
   });
 }
 
-function getRequests() {
+// Added index on timestamp and LIMIT to getRequests to prevent memory exhaustion and slow queries
+// Expected Impact: Eliminates unindexed full table sort and unbounded data transfer, fixing O(N) degradation.
+function getRequests(limit = 100) {
   return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM requests ORDER BY timestamp DESC', (err, rows) => {
+    db.all('SELECT * FROM requests ORDER BY timestamp DESC LIMIT ?', [limit], (err, rows) => {
       if (err) reject(err);
       else resolve(rows || []);
     });
