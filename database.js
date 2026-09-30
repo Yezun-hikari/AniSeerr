@@ -56,6 +56,9 @@ db.serialize(() => {
 
   db.run(`CREATE INDEX IF NOT EXISTS idx_requests_seerr_request_id ON requests(seerr_request_id)`);
 
+  // ⚡ Bolt: Added index to improve performance of getRequests() which sorts by timestamp DESC
+  db.run(`CREATE INDEX IF NOT EXISTS idx_requests_timestamp ON requests(timestamp DESC)`);
+
   const newCols = [
     "movie_site TEXT DEFAULT 'megakino'",
     "series_site TEXT DEFAULT 'sto'",
