@@ -13,3 +13,7 @@
 ## 2024-05-24 - Database I/O Overhead in Settings Lookups
 **Learning:** In Node.js applications using SQLite, querying the same table repeatedly for configuration data (like `getSettings()`) introduces unnecessary I/O overhead. This is especially true when settings are read frequently but updated rarely.
 **Action:** Always consider memoizing or caching database queries for application-wide configuration data to improve performance, ensuring proper cache invalidation on updates.
+
+## 2024-05-24 - Unbounded Queries on Logs
+**Learning:** Background listeners that accumulate log or event data (like webhooks) will cause O(N) performance degradation if they query without limits. Missing indexes on sort columns (like timestamp) will cause full table scans.
+**Action:** Always add indexes to sort columns and LIMIT clauses when querying unbounded event logs for display.
