@@ -1,0 +1,12 @@
+node_modules
+data
+.git
+.github
+.jules
+graphify-out
+test
+*.md
+.env
+Dockerfile
+docker-compose.yml
+.dockerignore

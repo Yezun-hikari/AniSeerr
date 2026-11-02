@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   aniseerr:
     image: ghcr.io/yezun-hikari/aniseerr:latest
@@ -8,4 +6,11 @@ services:
       - "5010:5010"
     volumes:
       - ./data:/app/data
+    environment:
+      # Password for the web interface. Empty disables the login (not recommended).
+      - ADMIN_PASSWORD=change-me
+      # Must match the "Authorization Header" of the Seerr webhook agent. Empty leaves the webhook open.
+      - WEBHOOK_SECRET=change-me
+      # Optional: a long random string to keep you logged in across restarts. Empty uses a random secret per start.
+      - SESSION_SECRET=
     restart: unless-stopped
