@@ -3,3 +3,5 @@ AniWorld-Downloader-models/
 seerr-develop/
 *.db
 .env
+data/
+graphify-out/
