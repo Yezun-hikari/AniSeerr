@@ -1,4 +1,4 @@
-<%- include('header') %>
+<%- include('partials/header') %>
 <div class="mt-4">
   <h2>User Exceptions</h2>
   <p class="text-muted">By default, all requests use the global language settings. You can add users here by their Seerr username to override their language preferences for Anime, Series, and Movies.</p>
@@ -9,36 +9,19 @@
       <form method="POST" action="/users/add">
         <div class="row align-items-end">
           <div class="col-md-3 mb-3">
-            <label class="form-label">Seerr Username</label>
-            <input type="text" class="form-control" name="username" required placeholder="e.g. Tim">
+            <label class="form-label" for="username">Seerr Username</label>
+            <input type="text" class="form-control" name="username" id="username" required placeholder="e.g. Tim">
           </div>
+          <% [['anime_language', 'Anime Lang'], ['series_language', 'Series Lang'], ['movie_language', 'Movie Lang']].forEach(([name, label]) => { %>
           <div class="col-md-2 mb-3">
-            <label class="form-label">Anime Lang</label>
-            <select class="form-select" name="anime_language">
-              <option value="German Dub">German Dub</option>
-              <option value="English Sub">English Sub</option>
-              <option value="German Sub">German Sub</option>
-              <option value="English Dub">English Dub</option>
+            <label class="form-label" for="<%= name %>"><%= label %></label>
+            <select class="form-select" name="<%= name %>" id="<%= name %>">
+              <% LANGUAGES.forEach(l => { %>
+              <option value="<%= l %>"><%= l %></option>
+              <% }); %>
             </select>
           </div>
-          <div class="col-md-2 mb-3">
-            <label class="form-label">Series Lang</label>
-            <select class="form-select" name="series_language">
-              <option value="German Dub">German Dub</option>
-              <option value="English Sub">English Sub</option>
-              <option value="German Sub">German Sub</option>
-              <option value="English Dub">English Dub</option>
-            </select>
-          </div>
-          <div class="col-md-2 mb-3">
-            <label class="form-label">Movie Lang</label>
-            <select class="form-select" name="movie_language">
-              <option value="German Dub">German Dub</option>
-              <option value="English Sub">English Sub</option>
-              <option value="German Sub">German Sub</option>
-              <option value="English Dub">English Dub</option>
-            </select>
-          </div>
+          <% }); %>
           <div class="col-md-3 mb-3">
             <button type="submit" class="btn btn-primary w-100">Save User</button>
           </div>
@@ -84,4 +67,4 @@
     </table>
   </div>
 </div>
-<%- include('footer') %>
+<%- include('partials/footer') %>

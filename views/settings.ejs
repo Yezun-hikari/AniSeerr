@@ -1,101 +1,105 @@
-<%- include('header') %>
+<%- include('partials/header') %>
+<%
+  const option = (value, current, fallback) =>
+    `<option value="${value}"${(current || fallback) === value ? ' selected' : ''}>${value}</option>`;
+  // Enabled sites first in saved order, then the remaining supported ones unchecked.
+  const siteRows = (value, fallback, known) => {
+    const on = (value || fallback).split(',').map(s => s.trim()).filter(s => known.includes(s));
+    return [...on.map(id => ({ id, on: true })), ...known.filter(s => !on.includes(s)).map(id => ({ id, on: false }))];
+  };
+%>
 <div class="mt-4">
   <h2>Settings</h2>
-  
-  <% if (typeof success !== 'undefined' && success) { %>
+
+  <% if (success) { %>
     <div class="alert alert-success">Settings saved successfully.</div>
   <% } %>
-  <% if (typeof error !== 'undefined' && error) { %>
+  <% if (error) { %>
     <div class="alert alert-danger"><%= error %></div>
   <% } %>
 
   <form method="POST" action="/settings">
-    <!-- Seerr settings removed as they are not needed for webhook push -->
-    
     <div class="row">
       <div class="col-md-6 mb-3">
-        <label class="form-label">AniWorld-Downloader URL</label>
+        <label class="form-label" for="aniworld_url">AniWorld-Downloader URL</label>
         <input type="text" class="form-control" name="aniworld_url" id="aniworld_url" value="<%= settings.aniworld_url || '' %>" placeholder="http://localhost:8080" required>
       </div>
       <div class="col-md-6 mb-3">
-        <label class="form-label">AniWorld API Key</label>
-        <input type="password" class="form-control" name="aniworld_api_key" value="<%= settings.aniworld_api_key || '' %>" placeholder="awd_...">
+        <label class="form-label" for="aniworld_api_key">AniWorld API Key</label>
+        <input type="password" class="form-control" name="aniworld_api_key" id="aniworld_api_key" value="" autocomplete="new-password" placeholder="<%= settings.aniworld_api_key ? 'Saved (leave empty to keep)' : 'awd_...' %>">
+        <% if (settings.aniworld_api_key) { %>
+        <div class="form-check mt-1">
+          <input class="form-check-input" type="checkbox" name="clear_api_key" value="1" id="clear_api_key">
+          <label class="form-check-label" for="clear_api_key">Clear saved key</label>
+        </div>
+        <% } %>
       </div>
     </div>
 
     <div class="row">
       <div class="col-md-6 mb-3">
         <h4>Movie Preferences</h4>
-        
-        <label class="form-label">Movie Site Priority (Drag to reorder)</label>
-        <input type="hidden" name="movie_site" id="movie_site_input" value="<%= settings.movie_site || 'megakino,filmpalast,cineby' %>">
-        <ul id="movie-sortable" class="list-group mb-3" style="cursor: grab;">
-          <% const m_sites = (settings.movie_site || 'megakino,filmpalast,cineby').split(',').map(s => s.trim()).filter(Boolean); %>
-          <% m_sites.forEach(site => { %>
-             <li class="list-group-item list-group-item-dark" data-id="<%= site %>"><%= site %> ↕</li>
+
+        <label class="form-label">Movie Site Priority (tick to use, drag to reorder)</label>
+        <input type="hidden" name="movie_site" id="movie_site_input" value="">
+        <ul id="movie-sortable" class="list-group mb-3 site-list" data-input="movie_site_input" style="cursor: grab;">
+          <% siteRows(settings.movie_site, DEFAULT_MOVIE_SITES, MOVIE_SITES).forEach(row => { %>
+            <li class="list-group-item list-group-item-dark d-flex align-items-center gap-2" data-id="<%= row.id %>">
+              <input class="form-check-input m-0" type="checkbox" id="movie-site-<%= row.id %>" <%= row.on ? 'checked' : '' %>>
+              <label class="form-check-label flex-grow-1" for="movie-site-<%= row.id %>"><%= row.id %></label>
+              <span aria-hidden="true">↕</span>
+            </li>
           <% }); %>
         </ul>
-        
+
         <label class="form-label">Provider</label>
         <select class="form-select mb-2" name="movie_provider">
-          <option value="VOE" <%= settings.movie_provider === 'VOE' ? 'selected' : '' %>>VOE</option>
-          <option value="Vidoza" <%= settings.movie_provider === 'Vidoza' ? 'selected' : '' %>>Vidoza</option>
-          <option value="Streamtape" <%= settings.movie_provider === 'Streamtape' ? 'selected' : '' %>>Streamtape</option>
-          <option value="Doodstream" <%= settings.movie_provider === 'Doodstream' ? 'selected' : '' %>>Doodstream</option>
+          <% PROVIDERS.forEach(p => { %><%- option(p, settings.movie_provider, DEFAULT_PROVIDER) %><% }); %>
         </select>
 
         <label class="form-label">Language</label>
         <select class="form-select mb-2" name="movie_language">
-          <option value="German Dub" <%= settings.movie_language === 'German Dub' ? 'selected' : '' %>>German Dub</option>
-          <option value="English Sub" <%= settings.movie_language === 'English Sub' ? 'selected' : '' %>>English Sub</option>
-          <option value="German Sub" <%= settings.movie_language === 'German Sub' ? 'selected' : '' %>>German Sub</option>
-          <option value="English Dub" <%= settings.movie_language === 'English Dub' ? 'selected' : '' %>>English Dub</option>
+          <% LANGUAGES.forEach(l => { %><%- option(l, settings.movie_language, DEFAULT_LANGUAGE) %><% }); %>
         </select>
 
         <label class="form-label">Default Download Path</label>
         <select class="form-select path-select" name="default_movie_path" data-selected="<%= settings.default_movie_path || '' %>">
-          <option value="">Default Path</option>
+          <option value="<%= settings.default_movie_path || '' %>"><%= settings.default_movie_path ? 'Saved path (ID ' + settings.default_movie_path + ')' : 'Default Path' %></option>
         </select>
       </div>
 
       <div class="col-md-6 mb-3">
         <h4>Series Preferences</h4>
-        <label class="form-label">Series Site Priority (Drag to reorder)</label>
-        <input type="hidden" name="series_site" id="series_site_input" value="<%= settings.series_site || 'aniworld,sto' %>">
-        <ul id="series-sortable" class="list-group mb-3" style="cursor: grab;">
-          <% const s_sites = (settings.series_site || 'aniworld,sto').split(',').map(s => s.trim()).filter(Boolean); %>
-          <% s_sites.forEach(site => { %>
-             <li class="list-group-item list-group-item-dark" data-id="<%= site %>"><%= site %> ↕</li>
+        <label class="form-label">Series Site Priority (tick to use, drag to reorder)</label>
+        <input type="hidden" name="series_site" id="series_site_input" value="">
+        <ul id="series-sortable" class="list-group mb-3 site-list" data-input="series_site_input" style="cursor: grab;">
+          <% siteRows(settings.series_site, DEFAULT_SERIES_SITES, SERIES_SITES).forEach(row => { %>
+            <li class="list-group-item list-group-item-dark d-flex align-items-center gap-2" data-id="<%= row.id %>">
+              <input class="form-check-input m-0" type="checkbox" id="series-site-<%= row.id %>" <%= row.on ? 'checked' : '' %>>
+              <label class="form-check-label flex-grow-1" for="series-site-<%= row.id %>"><%= row.id %></label>
+              <span aria-hidden="true">↕</span>
+            </li>
           <% }); %>
         </ul>
 
         <label class="form-label">Provider</label>
         <select class="form-select mb-2" name="series_provider">
-          <option value="VOE" <%= (!settings.series_provider || settings.series_provider === 'VOE') ? 'selected' : '' %>>VOE</option>
-          <option value="Vidoza" <%= settings.series_provider === 'Vidoza' ? 'selected' : '' %>>Vidoza</option>
-          <option value="Streamtape" <%= settings.series_provider === 'Streamtape' ? 'selected' : '' %>>Streamtape</option>
-          <option value="Doodstream" <%= settings.series_provider === 'Doodstream' ? 'selected' : '' %>>Doodstream</option>
+          <% PROVIDERS.forEach(p => { %><%- option(p, settings.series_provider, DEFAULT_PROVIDER) %><% }); %>
         </select>
 
         <label class="form-label">Anime Language</label>
         <select class="form-select mb-2" name="anime_language">
-          <option value="German Dub" <%= (!settings.anime_language || settings.anime_language === 'German Dub') ? 'selected' : '' %>>German Dub</option>
-          <option value="English Sub" <%= settings.anime_language === 'English Sub' ? 'selected' : '' %>>English Sub</option>
-          <option value="German Sub" <%= settings.anime_language === 'German Sub' ? 'selected' : '' %>>German Sub</option>
-          <option value="English Dub" <%= settings.anime_language === 'English Dub' ? 'selected' : '' %>>English Dub</option>
+          <% LANGUAGES.forEach(l => { %><%- option(l, settings.anime_language, DEFAULT_LANGUAGE) %><% }); %>
         </select>
 
         <label class="form-label">Series Language</label>
         <select class="form-select mb-2" name="series_language">
-          <option value="German Dub" <%= (!settings.series_language || settings.series_language === 'German Dub') ? 'selected' : '' %>>German Dub</option>
-          <option value="English Sub" <%= settings.series_language === 'English Sub' ? 'selected' : '' %>>English Sub</option>
-          <option value="German Sub" <%= settings.series_language === 'German Sub' ? 'selected' : '' %>>German Sub</option>
-          <option value="English Dub" <%= settings.series_language === 'English Dub' ? 'selected' : '' %>>English Dub</option>
+          <% LANGUAGES.forEach(l => { %><%- option(l, settings.series_language, DEFAULT_LANGUAGE) %><% }); %>
         </select>
 
         <label class="form-label">Default Download Path</label>
         <select class="form-select path-select" name="default_series_path" data-selected="<%= settings.default_series_path || '' %>">
-          <option value="">Default Path</option>
+          <option value="<%= settings.default_series_path || '' %>"><%= settings.default_series_path ? 'Saved path (ID ' + settings.default_series_path + ')' : 'Default Path' %></option>
         </select>
       </div>
     </div>
@@ -105,30 +109,27 @@
   </form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js" integrity="sha384-DgmC6Xe2bSN2WjTDXzWYbUbxyhNP+NNkGDR/g78pCXV7E7rcVTGxVg0uIVCUUcBc" crossorigin="anonymous"></script>
 <script>
   // Initialize Sortable Lists
-  new Sortable(document.getElementById('movie-sortable'), {
-    animation: 150,
-    onSort: function (evt) {
-      const order = Array.from(evt.to.children).map(el => el.getAttribute('data-id'));
-      document.getElementById('movie_site_input').value = order.join(',');
-    }
-  });
-
-  new Sortable(document.getElementById('series-sortable'), {
-    animation: 150,
-    onSort: function (evt) {
-      const order = Array.from(evt.to.children).map(el => el.getAttribute('data-id'));
-      document.getElementById('series_site_input').value = order.join(',');
-    }
+  // Hidden input = ticked sites in list order.
+  document.querySelectorAll('.site-list').forEach(list => {
+    const input = document.getElementById(list.dataset.input);
+    const sync = () => {
+      input.value = Array.from(list.children)
+        .filter(li => li.querySelector('input').checked)
+        .map(li => li.dataset.id).join(',');
+    };
+    new Sortable(list, { animation: 150, onSort: sync });
+    list.addEventListener('change', sync);
+    sync();
   });
 
   async function fetchPaths(showAlerts = true) {
     try {
       const resp = await fetch('/api/paths');
       const data = await resp.json();
-      
+
       if (resp.ok && data.paths) {
         document.querySelectorAll('.path-select').forEach(select => {
           const selected = select.getAttribute('data-selected');
@@ -141,16 +142,16 @@
             select.appendChild(opt);
           });
         });
-        if (showAlerts) alert("Paths loaded successfully from AniWorld Downloader!");
+        if (showAlerts) alert('Paths loaded successfully from AniWorld Downloader!');
       } else {
-        if (showAlerts) alert("AniWorld API returned an error: " + (data.error || "Unknown Error"));
+        if (showAlerts) alert('AniWorld API returned an error: ' + (data.error || 'Unknown Error'));
       }
-    } catch(err) {
-      if (showAlerts) alert("Failed to load paths. Ensure AniWorld URL is correct, saved, and the container is in the correct network.");
+    } catch (err) {
+      if (showAlerts) alert('Failed to load paths. Ensure AniWorld URL is correct, saved, and the container is in the correct network.');
     }
   }
 
   // Load paths silently on page load
   window.addEventListener('load', () => fetchPaths(false));
 </script>
-<%- include('footer') %>
+<%- include('partials/footer') %>

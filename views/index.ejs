@@ -1,8 +1,8 @@
-<%- include('header') %>
+<%- include('partials/header') %>
 <div class="mt-4">
   <h2>Accepted Requests</h2>
   <p>Latest requests automatically accepted by Seerr and sent to AniWorld (showing up to 100).</p>
-  
+
   <div class="table-responsive">
     <table class="table table-striped">
       <thead>
@@ -23,31 +23,32 @@
           </tr>
         <% } else { %>
           <% requests.forEach(function(req) { %>
+            <% const status = req.status || ''; %>
+            <% const ts = req.timestamp ? String(req.timestamp) : ''; %>
+            <% const iso = ts && !/Z$/.test(ts) ? ts.replace(' ', 'T') + 'Z' : ts; %>
             <tr>
               <td><%= req.seerr_request_id %></td>
               <td><strong><%= req.title %></strong></td>
               <td><span class="badge bg-secondary"><%= req.type %></span></td>
               <td><%= req.requester %></td>
               <td>
-                <% if (req.status === 'success' || req.status.includes('Queued')) { %>
-                  <span class="badge bg-success"><%= req.status === 'success' ? 'Queued in AniWorld' : req.status %></span>
-                <% } else if (req.status === 'Pending Approval') { %>
+                <% if (status.startsWith('Queued')) { %>
+                  <span class="badge bg-success"><%= status %></span>
+                <% } else if (status === 'Pending Approval') { %>
                   <span class="badge bg-warning text-dark">Pending</span>
-                <% } else if (req.status === 'Declined') { %>
-                  <span class="badge bg-danger">Declined</span>
-                <% } else if (req.status === 'Processing Download...') { %>
+                <% } else if (status === 'Processing Download...') { %>
                   <span class="badge bg-info text-dark">Processing...</span>
+                <% } else if (status === 'Test received') { %>
+                  <span class="badge bg-primary">Test received</span>
                 <% } else { %>
-                  <span class="badge bg-danger">Error: <%= req.status %></span>
+                  <span class="badge bg-danger">Error: <%= status %></span>
                 <% } %>
               </td>
-              <td><%= new Date(req.timestamp).toLocaleString() %></td>
+              <td><time datetime="<%= iso %>"><%= ts %> UTC</time></td>
               <td>
                 <form action="/delete-request" method="POST" class="d-inline">
                   <input type="hidden" name="seerr_request_id" value="<%= req.seerr_request_id %>">
-                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this request?')">
-                    <i class="bi bi-trash"></i> Delete
-                  </button>
+                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this request?')">Delete</button>
                 </form>
               </td>
             </tr>
@@ -57,4 +58,4 @@
     </table>
   </div>
 </div>
-<%- include('footer') %>
+<%- include('partials/footer') %>
